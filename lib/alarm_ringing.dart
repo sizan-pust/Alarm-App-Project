@@ -1,6 +1,7 @@
 //alarm_ringing.dart
 import 'package:esp/alarm_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
@@ -9,8 +10,15 @@ import 'notification_helper.dart';
 
 class AlarmRingScreen extends StatefulWidget {
   final String alarmLabel;
+  final bool fromNotification;
+  final bool launchedFromNotification;
 
-  const AlarmRingScreen({super.key, required this.alarmLabel});
+  const AlarmRingScreen({
+    super.key,
+    required this.alarmLabel,
+    this.fromNotification = false,
+    this.launchedFromNotification = false,
+  });
 
   @override
   State<AlarmRingScreen> createState() => _AlarmRingScreenState();
@@ -143,9 +151,22 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
                   onPressed: () {
                     _stopAlarm();
                     provider.updateAlarm(alarm!.copyWith(isActive: false));
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil('/home', (route) => false);
+                    if (widget.fromNotification) {
+                      if (widget.launchedFromNotification &&
+                          !Navigator.canPop(context)) {
+                        SystemNavigator.pop();
+                      } else if (Navigator.canPop(context)) {
+                        Navigator.of(context).pop();
+                      } else {
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/home', (route) => false);
+                      }
+                    } else {
+                      Navigator.of(
+                        context,
+                      ).pushNamedAndRemoveUntil('/home', (route) => false);
+                    }
                   },
                   icon: const Icon(Icons.done, size: 30),
                   label: const Text('DISMISS', style: TextStyle(fontSize: 20)),
@@ -177,9 +198,22 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
                       alarm.copyWith(time: snoozeTime, isActive: true),
                     );
 
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil('/home', (route) => false);
+                    if (widget.fromNotification) {
+                      if (widget.launchedFromNotification &&
+                          !Navigator.canPop(context)) {
+                        SystemNavigator.pop();
+                      } else if (Navigator.canPop(context)) {
+                        Navigator.of(context).pop();
+                      } else {
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/home', (route) => false);
+                      }
+                    } else {
+                      Navigator.of(
+                        context,
+                      ).pushNamedAndRemoveUntil('/home', (route) => false);
+                    }
                   },
                   icon: const Icon(Icons.snooze, size: 30),
                   label: Text(

@@ -59,7 +59,11 @@ class AlarmApp extends StatelessWidget {
           // Set the payload to null immediately after using it
           NotificationHelper.initialPayload = null;
 
-          return AlarmRingScreen(alarmLabel: alarmId);
+          return AlarmRingScreen(
+            alarmLabel: alarmId,
+            fromNotification: true,
+            launchedFromNotification: true,
+          );
         },
       },
       // Routes are still fine, but navigation from the notification handler

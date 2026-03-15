@@ -44,11 +44,15 @@ class NotificationHelper {
             alarmId.hashCode,
           ); // Navigate to Ringing Screen using the Global Key
           if (navigatorKey.currentState != null) {
-            // Note: We are using pushReplacement to ensure the Ringing Screen
-            // is the top-most screen and no back-stack conflict occurs.
-            navigatorKey.currentState!.pushReplacement(
+            // Use push so the existing back-stack is preserved. This lets
+            // dismiss/snooze pop back to the previous screen when available.
+            navigatorKey.currentState!.push(
               MaterialPageRoute(
-                builder: (context) => AlarmRingScreen(alarmLabel: alarmId),
+                builder: (context) => AlarmRingScreen(
+                  alarmLabel: alarmId,
+                  fromNotification: true,
+                  launchedFromNotification: false,
+                ),
               ),
             );
           }
