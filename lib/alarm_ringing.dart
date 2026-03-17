@@ -1,6 +1,7 @@
 //alarm_ringing.dart
 import 'package:esp/alarm_model.dart';
 import 'package:flutter/material.dart';
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +28,11 @@ class AlarmRingScreen extends StatefulWidget {
 class _AlarmRingScreenState extends State<AlarmRingScreen> {
   //final AudioPlayer _audioPlayer = AudioPlayer();
   late AudioPlayer _audioPlayer;
+  late TextEditingController _answerController;
+  int? _leftOperand;
+  int? _rightOperand;
+  String _operator = '+';
+  int? _correctAnswer;
   Alarm? _currentAlarm;
   @override
   void initState() {
@@ -34,7 +40,103 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
     NotificationHelper.cancelAlarm(widget.alarmLabel);
     _fetchAlarmDetails();
     _audioPlayer = AudioPlayer();
+    _answerController = TextEditingController();
     _startAlarm();
+  }
+
+  @override
+  void dispose() {
+    _answerController.dispose();
+    _stopAlarm();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  void _generateProblem() {
+    final rand = Random();
+    final ops = ['+', '-', '*'];
+    _operator = ops[rand.nextInt(ops.length)];
+    switch (_operator) {
+      case '+':
+        _leftOperand = rand.nextInt(50) + 1;
+        _rightOperand = rand.nextInt(50) + 1;
+        _correctAnswer = _leftOperand! + _rightOperand!;
+        break;
+      case '-':
+        _leftOperand = rand.nextInt(50) + 20;
+        _rightOperand = rand.nextInt(20) + 1;
+        _correctAnswer = _leftOperand! - _rightOperand!;
+        break;
+      case '*':
+        _leftOperand = rand.nextInt(12) + 2;
+        _rightOperand = rand.nextInt(9) + 2;
+        _correctAnswer = _leftOperand! * _rightOperand!;
+        break;
+    }
+    _answerController.text = '';
+  }
+
+  Future<bool> _showMathChallenge() async {
+    _generateProblem();
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        String? errorText;
+        return StatefulBuilder(
+          builder: (ctx2, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Solve to Dismiss'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${_leftOperand!} $_operator ${_rightOperand!} = ?',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _answerController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Your answer',
+                      errorText: errorText,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx2).pop(false);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final input = int.tryParse(_answerController.text.trim());
+                    if (input != null && input == _correctAnswer) {
+                      Navigator.of(ctx2).pop(true);
+                    } else {
+                      // show error in dialog by rebuilding with local state
+                      setStateDialog(() {
+                        errorText = 'Incorrect answer, try again';
+                        _answerController.text = '';
+                      });
+                    }
+                  },
+                  child: const Text('Check'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    return result ?? false;
   }
 
   void _fetchAlarmDetails() {
@@ -148,9 +250,14 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
                 width: double.infinity,
                 height: 60,
                 child: ElevatedButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
+                    final solved = await _showMathChallenge();
+                    if (!solved) return; // user cancelled or failed
+
+                    // correct answer: stop alarm and update provider
                     _stopAlarm();
                     provider.updateAlarm(alarm!.copyWith(isActive: false));
+
                     if (widget.fromNotification) {
                       if (widget.launchedFromNotification &&
                           !Navigator.canPop(context)) {
@@ -227,12 +334,5 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _stopAlarm();
-    _audioPlayer.dispose();
-    super.dispose();
   }
 }
