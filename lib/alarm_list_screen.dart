@@ -249,33 +249,64 @@ class AlarmListScreen extends StatelessWidget {
                 // Alarms grid or empty state
                 Expanded(
                   child: provider.alarms.isEmpty
-                      ? Center(
+                      ? Container(
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(25),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color.fromRGBO(0, 0, 0, 0.1),
+                                blurRadius: 8,
+                                offset: Offset(0, 0),
+                              ),
+                            ],
+                          ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.asset(
-                                'assets/empty_alarm.png',
-                                width: 180,
-                                height: 140,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  Icons.alarm_off,
-                                  size: 120,
-                                  color: Colors.grey[300],
+                              SizedBox(
+                                height: 200,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Image.asset(
+                                      'assets/images/icon1.png',
+                                      width: 200,
+                                      height: 180,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => Icon(
+                                        Icons.person_3,
+                                        size: 150,
+                                        color: Colors.grey[300],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 20),
                               const Text(
                                 'No Alarm found',
                                 style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black,
+                                  fontFamily: 'SF Pro Text',
                                 ),
                               ),
                               const SizedBox(height: 8),
                               const Text(
                                 'Add alarm to set goals',
-                                style: TextStyle(color: Colors.grey),
+                                style: TextStyle(
+                                  color: Color(0xFFA9A9A9),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w300,
+                                  fontFamily: 'SF Pro Text',
+                                ),
                               ),
+                              const SizedBox(height: 30),
                             ],
                           ),
                         )
