@@ -49,7 +49,14 @@ class AlarmApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Alarm App',
-      theme: ThemeData(useMaterial3: true, primarySwatch: Colors.blue),
+      theme: ThemeData(
+        useMaterial3: true,
+        primarySwatch: Colors.blue,
+        // Use SF Pro Text as the app font; on iOS this maps to the system SF fonts.
+        // If you want exact cross-platform parity, add SF Pro font files to assets and
+        // reference them in pubspec.yaml.
+        fontFamily: 'SF Pro Text',
+      ),
       initialRoute: initialRoute,
       routes: {
         '/home': (context) => const AlarmListScreen(),

@@ -33,7 +33,6 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
   int? _rightOperand;
   String _operator = '+';
   int? _correctAnswer;
-  Alarm? _currentAlarm;
   @override
   void initState() {
     super.initState();
@@ -152,7 +151,7 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
     // Set to loop
     _audioPlayer.setReleaseMode(ReleaseMode.loop);
 
-    if (await Vibration.hasVibrator() ?? false) {
+    if (await Vibration.hasVibrator() == true) {
       Vibration.vibrate(pattern: [1000, 500, 1000, 500], repeat: 1);
     }
   }
@@ -169,14 +168,30 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
 
   String _getCurrentDate() {
     final now = DateTime.now();
-    return '${now.day}/${now.month}/${now.year}';
+    final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final dayName = dayNames[now.weekday - 1];
+    final monthName = monthNames[now.month - 1];
+    return '$dayName, ${now.day} $monthName';
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AlarmProvider>(context, listen: false);
     Alarm? alarm;
-    String displayLabel = "Alarm Ringing"; // Default display text
 
     // ⭐️ FIX 3: Gracefully find the alarm by ID, handle 'No element' crash
     try {
@@ -188,7 +203,6 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
           return provider.alarms.first;
         },
       );
-      displayLabel = alarm.label;
     } catch (e) {
       // Handle crash if provider list is empty (should not happen if an alarm triggered it)
       print("Alarm not found or list empty: $e");
@@ -205,96 +219,94 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
         ),
       );
     }
+    // Figma-like ringing UI: gradient background, large time, date and small icon,
+    // centered prompt, snooze small button, and large dismiss button at bottom.
+    final mq = MediaQuery.of(context);
+    final timeFontSize = mq.size.width * 0.20; // responsive large time
     return Scaffold(
-      backgroundColor: Colors.red.shade50,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.alarm, size: 100, color: Colors.red),
-              const SizedBox(height: 30),
-
-              Text(
-                displayLabel,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 20),
-
-              Text(
-                _getCurrentTime(),
-                style: const TextStyle(
-                  fontSize: 64,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              Text(
-                _getCurrentDate(),
-                style: const TextStyle(fontSize: 20, color: Colors.grey),
-              ),
-
-              const SizedBox(height: 50),
-
-              /// DISMISS
-              SizedBox(
-                width: double.infinity,
-                height: 60,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final solved = await _showMathChallenge();
-                    if (!solved) return; // user cancelled or failed
-
-                    // correct answer: stop alarm and update provider
-                    _stopAlarm();
-                    provider.updateAlarm(alarm!.copyWith(isActive: false));
-
-                    if (widget.fromNotification) {
-                      if (widget.launchedFromNotification &&
-                          !Navigator.canPop(context)) {
-                        SystemNavigator.pop();
-                      } else if (Navigator.canPop(context)) {
-                        Navigator.of(context).pop();
-                      } else {
-                        Navigator.of(
-                          context,
-                        ).pushNamedAndRemoveUntil('/home', (route) => false);
-                      }
-                    } else {
-                      Navigator.of(
-                        context,
-                      ).pushNamedAndRemoveUntil('/home', (route) => false);
-                    }
-                  },
-                  icon: const Icon(Icons.done, size: 30),
-                  label: const Text('DISMISS', style: TextStyle(fontSize: 20)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFF6B9D), // vibrant pink
+              Color(0xFFE0488E), // darker pink/magenta
+              Color(0xFFC837AB), // purple
+              Color(0xFF5E72E4), // blue
+            ],
+            stops: [0.0, 0.35, 0.65, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              children: [
+                // Top row: small icon and date
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.wb_sunny_outlined,
+                      size: 24,
+                      color: Colors.white70,
                     ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _getCurrentDate(),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+
+                // Large time
+                Text(
+                  _getCurrentTime(),
+                  style: TextStyle(
+                    fontFamily: 'SF Pro Display',
+                    fontSize: timeFontSize,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    height: 0.9,
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-              /// SNOOZE
-              SizedBox(
-                width: double.infinity,
-                height: 60,
-                child: OutlinedButton.icon(
+                // Title / prompt
+                const Text(
+                  'Wake up!',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Small centered snooze button
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.25),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                   onPressed: () {
+                    // Keep original snooze behavior
                     _stopAlarm();
 
                     final snoozeTime = DateTime.now().add(
@@ -322,14 +334,64 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
                       ).pushNamedAndRemoveUntil('/home', (route) => false);
                     }
                   },
-                  icon: const Icon(Icons.snooze, size: 30),
-                  label: Text(
-                    'SNOOZE (${alarm.snoozeDuration} MIN)',
-                    style: const TextStyle(fontSize: 20),
+                  child: const Text(
+                    'Snooze',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
-              ),
-            ],
+
+                const Spacer(),
+
+                // Bottom large dismiss button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final solved = await _showMathChallenge();
+                      if (!solved) return;
+
+                      _stopAlarm();
+                      provider.updateAlarm(alarm!.copyWith(isActive: false));
+
+                      if (widget.fromNotification) {
+                        if (widget.launchedFromNotification &&
+                            !Navigator.canPop(context)) {
+                          SystemNavigator.pop();
+                        } else if (Navigator.canPop(context)) {
+                          Navigator.of(context).pop();
+                        } else {
+                          Navigator.of(
+                            context,
+                          ).pushNamedAndRemoveUntil('/home', (route) => false);
+                        }
+                      } else {
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/home', (route) => false);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF6C84C),
+                      foregroundColor: Colors.black87,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                    ),
+                    child: const Text(
+                      'Dismiss',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
         ),
       ),

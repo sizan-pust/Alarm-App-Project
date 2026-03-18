@@ -72,9 +72,11 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
               child: Container(
                 padding: const EdgeInsets.all(30),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.blue.shade100),
+                  color: const Color(0xFFF6C84C).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFF6C84C).withOpacity(0.3),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -83,13 +85,13 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                       style: const TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                        color: Color(0xFFF6C84C),
                       ),
                     ),
                     const SizedBox(height: 10),
                     const Text(
                       'Tap to change time',
-                      style: TextStyle(color: Colors.blue, fontSize: 16),
+                      style: TextStyle(color: Color(0xFFF6C84C), fontSize: 16),
                     ),
                   ],
                 ),
@@ -169,16 +171,16 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
           child: ElevatedButton(
             onPressed: _saveAlarm,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFFF6C84C),
+              foregroundColor: Colors.black87,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: Text(
               widget.alarm == null ? 'Save Alarm' : 'Update Alarm',
-              style: const TextStyle(fontSize: 18),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -208,9 +210,9 @@ class _AddAlarmScreenState extends State<AddAlarmScreen> {
                   _selectedDays[index] = selected;
                 });
               },
-              selectedColor: Colors.blue,
+              selectedColor: const Color(0xFFF6C84C),
               labelStyle: TextStyle(
-                color: _selectedDays[index] ? Colors.white : Colors.black,
+                color: _selectedDays[index] ? Colors.black87 : Colors.black,
               ),
             );
           }),
