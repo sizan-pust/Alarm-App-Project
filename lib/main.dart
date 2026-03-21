@@ -59,7 +59,7 @@ class AlarmApp extends StatelessWidget {
       ),
       initialRoute: initialRoute,
       routes: {
-        '/home': (context) => const AlarmListScreen(),
+        '/home': (context) => const HomeScreen(),
         '/ringing': (context) {
           // 3. Extract the payload and pass it to the ringing screen
           final alarmId = NotificationHelper.initialPayload!;
