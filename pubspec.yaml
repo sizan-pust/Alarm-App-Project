@@ -74,6 +74,7 @@ flutter:
     - assets/alarm.mp3
     - assets/images/man_icon.png
     - assets/images/clock_bg.png
+    - assets/images/profile.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

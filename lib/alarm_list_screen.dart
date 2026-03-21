@@ -635,7 +635,10 @@
 //   }
 // }
 import 'package:esp/add_alarm.dart' show AddAlarmScreen;
+import 'package:esp/alarm_model.dart' show Alarm;
+import 'package:esp/alarm_provider.dart' show AlarmProvider;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart' show Provider, Consumer;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -723,7 +726,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         SizedBox(height: 10),
                         Text(
-                          "Soham Ningurkar",
+                          "AR SIZAN",
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -742,7 +745,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   CircleAvatar(
                     radius: 28,
                     backgroundImage: AssetImage(
-                      'assets/profile.jpg',
+                      'assets/images/profile.jpg',
                     ), // your image
                   ),
                 ],
@@ -841,24 +844,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // 🔹 EMPTY STATE
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/man_icon.png', // your sleeping image
-                    height: 180,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "No Alarm found",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    "Add alarm to set goals",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
+              child: Consumer<AlarmProvider>(
+                builder: (context, provider, child) {
+                  if (provider.alarms.isEmpty) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset('assets/images/man_icon.png', height: 180),
+                        const SizedBox(height: 20),
+                        const Text(
+                          "No Alarm found",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        const Text(
+                          "Add alarm to set goals",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: provider.alarms.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.85,
+                        ),
+                    itemBuilder: (context, index) {
+                      final alarm = provider.alarms[index];
+                      return _buildAlarmCard(alarm, context);
+                    },
+                  );
+                  ;
+                },
               ),
             ),
           ],
@@ -957,5 +983,271 @@ Widget _buildDay(String day, String date, bool isSelected) {
               style: const TextStyle(fontSize: 18, color: Colors.grey),
             ),
     ],
+  );
+}
+
+// Widget _buildAlarmCard(Alarm alarm, BuildContext context) {
+//   final provider = Provider.of<AlarmProvider>(context, listen: false);
+//   final isActive = alarm.isActive;
+
+//   return Container(
+//     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//     padding: const EdgeInsets.all(16),
+//     decoration: BoxDecoration(
+//       color: isActive ? Colors.white : Colors.grey.shade200,
+//       borderRadius: BorderRadius.circular(20),
+//       border: Border.all(
+//         color: isActive ? const Color(0xFFF0B429) : Colors.transparent,
+//         width: 2,
+//       ),
+//       boxShadow: [
+//         if (isActive)
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.08),
+//             blurRadius: 10,
+//             offset: const Offset(0, 4),
+//           ),
+//       ],
+//     ),
+//     child: Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         /// TOP ROW
+//         Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: [
+//             Text(
+//               alarm.label,
+//               style: TextStyle(
+//                 fontSize: 16,
+//                 color: isActive ? Colors.black87 : Colors.grey,
+//               ),
+//             ),
+//             const Icon(Icons.more_horiz),
+//           ],
+//         ),
+
+//         const SizedBox(height: 10),
+
+//         /// TIME
+//         Row(
+//           crossAxisAlignment: CrossAxisAlignment.end,
+//           children: [
+//             Text(
+//               alarm.formattedTime.split(' ')[0],
+//               style: TextStyle(
+//                 fontSize: 40,
+//                 fontWeight: FontWeight.bold,
+//                 color: isActive ? Colors.black : Colors.grey,
+//               ),
+//             ),
+//             const SizedBox(width: 6),
+//             Padding(
+//               padding: const EdgeInsets.only(bottom: 6),
+//               child: Text(
+//                 alarm.dayPeriod,
+//                 style: TextStyle(
+//                   fontSize: 18,
+//                   color: isActive ? Colors.black : Colors.grey,
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+
+//         const SizedBox(height: 10),
+
+//         /// REPEAT DAYS
+//         Row(
+//           children: List.generate(7, (index) {
+//             final dayIndex = index + 1;
+//             final isSelected = alarm.repeatDays.contains(dayIndex);
+
+//             const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+//             return Padding(
+//               padding: const EdgeInsets.only(right: 6),
+//               child: Text(
+//                 days[index],
+//                 style: TextStyle(
+//                   fontSize: 14,
+//                   color: isSelected ? const Color(0xFFF0B429) : Colors.grey,
+//                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+//                 ),
+//               ),
+//             );
+//           }),
+//         ),
+
+//         const SizedBox(height: 16),
+
+//         /// BOTTOM ROW
+//         Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: [
+//             Icon(
+//               Icons.access_alarm,
+//               color: isActive ? const Color(0xFFF0B429) : Colors.grey,
+//             ),
+
+//             Switch(
+//               value: isActive,
+//               onChanged: (_) {
+//                 Provider.of<AlarmProvider>(
+//                   context,
+//                   listen: false,
+//                 ).toggleAlarm(alarm.id);
+//               },
+//               activeColor: Colors.green,
+//             ),
+//           ],
+//         ),
+//       ],
+//     ),
+//   );
+// }
+Widget _buildAlarmCard(Alarm alarm, BuildContext context) {
+  final provider = Provider.of<AlarmProvider>(context, listen: false);
+  final isActive = alarm.isActive;
+
+  return Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: isActive ? Colors.white : Colors.grey.shade200,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: isActive ? const Color(0xFFF0B429) : Colors.transparent,
+        width: 2,
+      ),
+      boxShadow: [
+        if (isActive)
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        /// 🔹 TOP ROW (Label + Menu)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                alarm.label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isActive ? Colors.black87 : Colors.grey,
+                ),
+              ),
+            ),
+
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_horiz),
+              onSelected: (value) {
+                if (value == 'edit') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddAlarmScreen(alarm: alarm),
+                    ),
+                  );
+                } else if (value == 'delete') {
+                  provider.deleteAlarm(alarm.id);
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Delete', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        /// 🔹 TIME
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              alarm.formattedTime.split(' ')[0],
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: isActive ? Colors.black : Colors.grey,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                alarm.dayPeriod,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isActive ? Colors.black : Colors.grey,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        /// 🔹 DAYS ROW
+        Row(
+          children: List.generate(7, (index) {
+            final dayIndex = index + 1;
+            final isSelected = alarm.repeatDays.contains(dayIndex);
+
+            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Text(
+                days[index],
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isSelected ? const Color(0xFFF0B429) : Colors.grey,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            );
+          }),
+        ),
+
+        const Spacer(),
+
+        /// 🔹 BOTTOM ROW (Icon + Switch)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(
+              Icons.access_alarm,
+              size: 20,
+              color: isActive ? const Color(0xFFF0B429) : Colors.grey,
+            ),
+
+            Transform.scale(
+              scale: 0.8,
+              child: Switch(
+                value: isActive,
+                onChanged: (_) {
+                  provider.toggleAlarm(alarm.id);
+                },
+                activeColor: Colors.green,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
   );
 }
