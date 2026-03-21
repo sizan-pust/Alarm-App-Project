@@ -634,15 +634,68 @@
 //     );
 //   }
 // }
+import 'package:esp/add_alarm.dart' show AddAlarmScreen;
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  DateTime now = DateTime.now();
+  String _getGreeting() {
+    final hour = now.hour;
+
+    if (hour < 12) return "Good Morning ☀️";
+    if (hour < 17) return "Good Afternoon 🌤️";
+    return "Good Evening 🌙";
+  }
+
+  String _formatMonthYear() {
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    return "${months[now.month - 1]} ${now.year}";
+  }
+
+  String _getDayName(int weekday) {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    return days[weekday - 1];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ⏱️ Update every minute
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(seconds: 30));
+      setState(() {
+        now = DateTime.now();
+      });
+      return true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
 
       body: SafeArea(
         child: Column(
@@ -663,9 +716,9 @@ class HomeScreen extends StatelessWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
-                          "Good Morning ☀️",
+                          _getGreeting(),
                           style: TextStyle(fontSize: 18, color: Colors.grey),
                         ),
                         SizedBox(height: 10),
@@ -701,46 +754,46 @@ class HomeScreen extends StatelessWidget {
             // 🔹 DATE SELECTOR
             Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: const [
-                    Text("Sun\n30"),
-                    Text("Mon\n31"),
-                    Text("Tue\n1"),
-                    Text(
-                      "Wed\n2",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text("Thu\n3"),
-                    Text("Fri\n4"),
-                  ],
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 30, // number of days to show
+                    itemBuilder: (context, index) {
+                      final date = DateTime.now().add(
+                        Duration(days: index - 3),
+                      );
+                      final isSelected =
+                          date.day == now.day &&
+                          date.month == now.month &&
+                          date.year == now.year;
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              now = date; // update selected date
+                            });
+                          },
+                          child: _buildDay(
+                            _getDayName(date.weekday),
+                            date.day.toString(),
+                            isSelected,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
-                // SELECTED DAY CIRCLE
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFFFA726), Color(0xFFFFE082)],
-                    ),
-                  ),
-                  child: const Text(
-                    "2",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                const Text(
-                  "February 2022",
+                Text(
+                  _formatMonthYear(),
                   style: TextStyle(
                     fontSize: 18,
-                    color: Color(0xFFFFA726),
+                    color: Color(0xFFF09819),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -792,7 +845,7 @@ class HomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/sleep.png', // your sleeping image
+                    'assets/images/man_icon.png', // your sleeping image
                     height: 180,
                   ),
                   const SizedBox(height: 20),
@@ -813,16 +866,24 @@ class HomeScreen extends StatelessWidget {
       ),
 
       // 🔹 FLOATING BUTTON
-      floatingActionButton: Container(
-        height: 70,
-        width: 70,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [Color(0xFFFFA726), Color(0xFFFFE082)],
+      floatingActionButton: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddAlarmScreen()),
+          );
+        },
+        child: Container(
+          height: 70,
+          width: 70,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [Color(0xFFF09819), Color(0xFFEDDE5D)],
+            ),
           ),
+          child: const Icon(Icons.add, size: 32, color: Colors.black),
         ),
-        child: const Icon(Icons.add, size: 32, color: Colors.black),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
@@ -846,4 +907,55 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _buildDay(String day, String date, bool isSelected) {
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (!isSelected) Text(day, style: const TextStyle(color: Colors.grey)),
+
+      const SizedBox(height: 4),
+      isSelected
+          ? SizedBox(
+              width: 80,
+              height: 70,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/clock_bg.png',
+                    width: 70,
+                    height: 70,
+                  ),
+
+                  // ✅ PERFECT CENTER ALIGNMENT
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        day,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        date,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            )
+          : Text(
+              date,
+              style: const TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+    ],
+  );
 }
